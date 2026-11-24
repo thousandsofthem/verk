@@ -2,13 +2,13 @@ defmodule Verk.Mixfile do
   use Mix.Project
 
   @source_url "https://github.com/edgurgel/verk"
-  @version "1.7.3"
+  @version "1.8.0"
 
   def project do
     [
       app: :verk,
       version: @version,
-      elixir: "~> 1.9",
+      elixir: "~> 1.16",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       name: "Verk",

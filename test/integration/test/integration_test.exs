@@ -110,23 +110,37 @@ defmodule IntegrationTest do
 
     {:ok, _} =
       Verk.enqueue(
-        %Verk.Job{queue: "queue_one", class: Integration.FailWorker, args: ["r"], max_retry_count: 1},
+        %Verk.Job{
+          queue: "queue_one",
+          class: Integration.FailWorker,
+          args: ["r"],
+          max_retry_count: 1
+        },
         redis
       )
 
     {:ok, _} =
       Verk.enqueue(
-        %Verk.Job{queue: "queue_two", class: Integration.FailWorker, args: ["d"], max_retry_count: 0},
+        %Verk.Job{
+          queue: "queue_two",
+          class: Integration.FailWorker,
+          args: ["d"],
+          max_retry_count: 0
+        },
         redis
       )
 
-    retried = wait_for(fn -> Redix.command!(redis, ["ZRANGE", "retry", "0", "-1"]) |> List.first() end)
+    retried =
+      wait_for(fn -> Redix.command!(redis, ["ZRANGE", "retry", "0", "-1"]) |> List.first() end)
+
     assert retried, "job never reached the retry set"
     retried = Jason.decode!(retried)
     assert retried["error_message"] =~ "integration failure r"
     assert retried["error_backtrace"] =~ "Integration.FailWorker.perform/1"
 
-    dead = wait_for(fn -> Redix.command!(redis, ["ZRANGE", "dead", "0", "-1"]) |> List.first() end)
+    dead =
+      wait_for(fn -> Redix.command!(redis, ["ZRANGE", "dead", "0", "-1"]) |> List.first() end)
+
     assert dead, "job never reached the dead set"
     assert Jason.decode!(dead)["error_message"] =~ "integration failure d"
   end

@@ -1,5 +1,16 @@
 ![Verk](https://i.imgur.com/unSd0Zr.png)
 
+> **Fork of [edgurgel/verk](https://github.com/edgurgel/verk)** (upstream unmaintained since 1.7.3, 2021).
+> Same Redis data format as verk 1.7.3, so it can replace it in place. Changes in 1.8.0:
+> redix `~> 1.5` (allows telemetry 1.x), real stacktraces for failed jobs (`System.stacktrace/0`
+> returned `[]` on OTP 23+), `Logger.warning` (a configured `:warn` job log level still works),
+> child specs instead of `Supervisor.Spec`, no compile warnings on Elixir 1.18, deterministic
+> tests, GitHub Actions CI. Requires Elixir 1.16+.
+>
+> ```elixir
+> {:verk, git: "https://github.com/thousandsofthem/verk.git", tag: "v1.8.0"}
+> ```
+
 [![Build Status](https://travis-ci.org/edgurgel/verk.svg?branch=master)](https://travis-ci.org/edgurgel/verk)
 [![Coverage Status](https://coveralls.io/repos/edgurgel/verk/badge.svg?branch=master&service=github)](https://coveralls.io/github/edgurgel/verk?branch=master)
 [![Module Version](https://img.shields.io/hexpm/v/verk.svg)](https://hex.pm/packages/verk)
