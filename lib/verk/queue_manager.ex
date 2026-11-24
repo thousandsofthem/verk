@@ -116,9 +116,7 @@ defmodule Verk.QueueManager do
 
       {:error, reason} ->
         Logger.error(
-          "Failed to add jobs back to queue #{state.queue_name} from inprogress. Error: #{
-            inspect(reason)
-          }"
+          "Failed to add jobs back to queue #{state.queue_name} from inprogress. Error: #{inspect(reason)}"
         )
 
         {:stop, :redis_failed, state}

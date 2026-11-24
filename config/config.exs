@@ -17,5 +17,8 @@ config :logger, :console,
 if Mix.env() == :test do
   # Silent logging for tests
   config :logger, backends: []
-  config :verk, queues: [{:default, 1}], redis_url: System.get_env("VERK_TEST_REDIS_URL", "redis://127.0.0.1:6379/15")
+
+  config :verk,
+    queues: [{:default, 1}],
+    redis_url: System.get_env("VERK_TEST_REDIS_URL", "redis://127.0.0.1:6379/15")
 end

@@ -35,7 +35,7 @@ defmodule Verk.Mixfile do
       {:confex, "~> 3.3"},
       {:gen_stage, "~> 1.0"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
-            {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:mimic, "~> 1.10", only: :test}
     ]
   end

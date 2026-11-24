@@ -69,7 +69,8 @@ defmodule Verk.WorkerTest do
       handle_cast({:perform, job, worker}, :state)
 
       # System.stacktrace/0 returns [] on OTP 23+, which stored failed jobs without a backtrace
-      assert_receive {:"$gen_cast", {:failed, ^worker, "job_id", _, [{FailWorker, :perform, 1, _} | _]}}
+      assert_receive {:"$gen_cast",
+                      {:failed, ^worker, "job_id", _, [{FailWorker, :perform, 1, _} | _]}}
     end
 
     test "cast perform accessing the job" do

@@ -1,5 +1,6 @@
 defmodule Verk.LogTest do
-  use ExUnit.Case, async: true
+  # changes :verk app env in one test
+  use ExUnit.Case, async: false
   import ExUnit.CaptureLog
 
   alias Verk.Time
@@ -35,6 +36,23 @@ defmodule Verk.LogTest do
       assert capture_log(fn ->
                Verk.Log.done(job, start_time, worker)
              end) =~ ~r/done: \d+ s/
+    end
+  end
+
+  describe "deprecated :warn level" do
+    setup do
+      Application.put_env(:verk, :fail_job_log_level, :warn)
+      on_exit(fn -> Application.delete_env(:verk, :fail_job_log_level) end)
+    end
+
+    test "is logged as :warning" do
+      log =
+        capture_log([level: :warning], fn ->
+          Verk.Log.fail(%Verk.Job{}, Verk.Time.now(), self())
+        end)
+
+      assert log =~ "[warning]"
+      assert log =~ ~r/fail: \d+ ms/
     end
   end
 
