@@ -47,9 +47,7 @@ defmodule Verk.ScheduleManager do
     handle_info(:fetch_retryable, state, @retry_key)
   end
 
-  @doc """
-  Search for scheduled jobs to be done and if removal succeeds enqueue the job.
-  """
+  # Search for scheduled jobs to be done and if removal succeeds enqueue the job.
   def handle_info(:fetch_scheduled, state) do
     handle_info(:fetch_scheduled, state, @schedule_key)
   end

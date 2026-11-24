@@ -23,7 +23,7 @@ defmodule Verk.QueueStatsCounters do
     prefix = to_charlist(prefix)
 
     match =
-      if prefix != '' do
+      if prefix != ~c"" do
         [
           {{prefix ++ :"$1", :"$2", :"$3", :"$4", :_, :_}, [],
            [{{prefix ++ :"$1", :"$2", :"$3", :"$4"}}]}

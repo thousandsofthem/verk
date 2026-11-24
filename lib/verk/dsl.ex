@@ -6,11 +6,14 @@ defmodule Verk.Dsl do
   """
   defmacro bangify(result) do
     quote do
-      case unquote(result) do
-        :ok -> nil
-        {:ok, value} -> value
-        {:error, error} -> raise error
-      end
+      Verk.Dsl.unwrap!(unquote(result))
     end
   end
+
+  # A function rather than inline clauses: callers return only some of these
+  # shapes, and inlined unreachable clauses trip the compiler's type checks.
+  @doc false
+  def unwrap!(:ok), do: nil
+  def unwrap!({:ok, value}), do: value
+  def unwrap!({:error, error}), do: raise(error)
 end
