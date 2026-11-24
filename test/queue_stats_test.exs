@@ -1,5 +1,6 @@
 defmodule Verk.QueueStatsTest do
-  use ExUnit.Case, async: true
+  # registers the global Verk.Redis name
+  use ExUnit.Case, async: false
   import Verk.QueueStats
   import Mimic
   alias Verk.QueueStatsCounters
@@ -10,6 +11,7 @@ defmodule Verk.QueueStatsTest do
   @table :queue_stats
 
   setup do
+    Verk.TestHelpers.await_unregistered(Verk.Redis)
     {:ok, _} = Confex.get_env(:verk, :redis_url) |> Redix.start_link(name: Verk.Redis)
 
     Redix.pipeline!(Verk.Redis, [

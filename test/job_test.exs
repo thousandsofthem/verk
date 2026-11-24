@@ -1,5 +1,6 @@
 defmodule Verk.JobTest do
-  use ExUnit.Case, async: true
+  # changes the global :verk max_retry_count env, read by async tests (QueueManagerTest)
+  use ExUnit.Case, async: false
   alias Verk.Job
 
   describe "encode!/1" do
@@ -53,8 +54,15 @@ defmodule Verk.JobTest do
         Job.encode!(%Verk.Job{})
         |> Job.decode!()
 
-      assert map ==
+      # JSON key order depends on map ordering (changed in OTP 26+), compare decoded
+      assert Jason.decode!(map.original_json) ==
+               Jason.decode!(
+                 "{\"args\":\"[]\",\"class\":null,\"created_at\":null,\"enqueued_at\":null,\"error_backtrace\":null,\"error_message\":null,\"failed_at\":null,\"finished_at\":null,\"jid\":null,\"max_retry_count\":null,\"queue\":null,\"retried_at\":null,\"retry_count\":0}"
+               )
+
+      assert %{map | original_json: nil} ==
                %Verk.Job{
+                 original_json: nil,
                  args: [],
                  class: nil,
                  created_at: nil,
@@ -65,8 +73,6 @@ defmodule Verk.JobTest do
                  finished_at: nil,
                  jid: nil,
                  max_retry_count: nil,
-                 original_json:
-                   "{\"args\":\"[]\",\"class\":null,\"created_at\":null,\"enqueued_at\":null,\"error_backtrace\":null,\"error_message\":null,\"failed_at\":null,\"finished_at\":null,\"jid\":null,\"max_retry_count\":null,\"queue\":null,\"retried_at\":null,\"retry_count\":0}",
                  queue: nil,
                  retried_at: nil,
                  retry_count: 0
@@ -78,8 +84,15 @@ defmodule Verk.JobTest do
         Job.encode!(%Verk.Job{max_retry_count: 5, queue: :default})
         |> Job.decode!()
 
-      assert map ==
+      # JSON key order depends on map ordering (changed in OTP 26+), compare decoded
+      assert Jason.decode!(map.original_json) ==
+               Jason.decode!(
+                 "{\"args\":\"[]\",\"class\":null,\"created_at\":null,\"enqueued_at\":null,\"error_backtrace\":null,\"error_message\":null,\"failed_at\":null,\"finished_at\":null,\"jid\":null,\"max_retry_count\":5,\"queue\":\"default\"\,\"retried_at\":null,\"retry_count\":0}"
+               )
+
+      assert %{map | original_json: nil} ==
                %Verk.Job{
+                 original_json: nil,
                  args: [],
                  class: nil,
                  created_at: nil,
@@ -90,8 +103,6 @@ defmodule Verk.JobTest do
                  finished_at: nil,
                  jid: nil,
                  max_retry_count: 5,
-                 original_json:
-                   "{\"args\":\"[]\",\"class\":null,\"created_at\":null,\"enqueued_at\":null,\"error_backtrace\":null,\"error_message\":null,\"failed_at\":null,\"finished_at\":null,\"jid\":null,\"max_retry_count\":5,\"queue\":\"default\"\,\"retried_at\":null,\"retry_count\":0}",
                  queue: "default",
                  retried_at: nil,
                  retry_count: 0

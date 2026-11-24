@@ -20,7 +20,9 @@ defmodule Verk.WorkersManagerTest do
   end
 
   setup_all do
-    {:ok, _} = GenStage.start_link(Verk.EventProducer, :ok, name: Verk.EventProducer)
+    {:ok, producer} = GenStage.start_link(Verk.EventProducer, :ok, name: Verk.EventProducer)
+    # setup_all's process exits normally, which doesn't take linked processes down
+    on_exit(fn -> if Process.alive?(producer), do: GenStage.stop(producer) end)
     :ok
   end
 

@@ -7,6 +7,7 @@ defmodule Verk.QueuesDrainerTest do
   setup :verify_on_exit!
 
   setup do
+    Verk.TestHelpers.await_unregistered(EventProducer)
     {:ok, pid} = EventProducer.start_link()
 
     on_exit(fn -> assert_down(pid) end)

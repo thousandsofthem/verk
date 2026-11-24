@@ -1,5 +1,6 @@
 defmodule VerkTest do
-  use ExUnit.Case, async: true
+  # changes the global :verk max_retry_count env, read by async tests (QueueManagerTest)
+  use ExUnit.Case, async: false
   import Mimic
   import Verk
   alias Verk.{Time, Manager}

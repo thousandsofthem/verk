@@ -1,5 +1,6 @@
 defmodule Verk.QueueTest do
-  use ExUnit.Case, async: true
+  # registers the global Verk.Redis name
+  use ExUnit.Case, async: false
   import Verk.Queue
 
   @queue "default"
