@@ -29,7 +29,7 @@ defmodule Verk.Mixfile do
 
   defp deps do
     [
-      {:redix, "~> 0.8"},
+      {:redix, "~> 1.5"},
       {:jason, "~> 1.0"},
       {:poolboy, "~> 1.5"},
       {:confex, "~> 3.3"},
