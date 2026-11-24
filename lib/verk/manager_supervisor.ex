@@ -10,9 +10,9 @@ defmodule Verk.Manager.Supervisor do
     queues = Confex.get_env(:verk, :queues, [])
     children = for {queue, size} <- queues, do: Verk.Queue.Supervisor.child_spec(queue, size)
 
-    children = [worker(Verk.Manager, [queues], id: Verk.Manager) | children]
+    children = [Verk.ChildSpec.worker(Verk.Manager, Verk.Manager, [queues]) | children]
 
-    supervise(children, strategy: :rest_for_one)
+    Supervisor.init(children, strategy: :rest_for_one)
   end
 
   @doc false

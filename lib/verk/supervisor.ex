@@ -23,7 +23,7 @@ defmodule Verk.Supervisor do
 
     Application.put_env(:verk, :local_node_id, local_verk_node_id)
 
-    supervise(children(), strategy: :one_for_one)
+    Supervisor.init(children(), strategy: :one_for_one)
   end
 
   defp children do
@@ -31,17 +31,14 @@ defmodule Verk.Supervisor do
     shutdown_timeout = Confex.get_env(:verk, :shutdown_timeout, 30_000)
     generate_node_id = Confex.get_env(:verk, :generate_node_id)
 
-    redis = worker(Redix, [redis_url, [name: Verk.Redis]], id: Verk.Redis)
-    event_producer = worker(Verk.EventProducer, [], id: Verk.EventProducer)
-    queue_stats = worker(Verk.QueueStats, [], id: Verk.QueueStats)
-    schedule_manager = worker(Verk.ScheduleManager, [], id: Verk.ScheduleManager)
-    manager_sup = supervisor(Verk.Manager.Supervisor, [], id: Verk.Manager.Supervisor)
+    redis = Verk.ChildSpec.worker(Verk.Redis, Redix, [redis_url, [name: Verk.Redis]])
+    event_producer = Verk.ChildSpec.worker(Verk.EventProducer, Verk.EventProducer, [])
+    queue_stats = Verk.ChildSpec.worker(Verk.QueueStats, Verk.QueueStats, [])
+    schedule_manager = Verk.ChildSpec.worker(Verk.ScheduleManager, Verk.ScheduleManager, [])
+    manager_sup = Verk.ChildSpec.supervisor(Verk.Manager.Supervisor, Verk.Manager.Supervisor, [])
 
     drainer =
-      worker(
-        Verk.QueuesDrainer,
-        [shutdown_timeout],
-        id: Verk.QueuesDrainer,
+      Verk.ChildSpec.worker(Verk.QueuesDrainer, Verk.QueuesDrainer, [shutdown_timeout],
         shutdown: shutdown_timeout
       )
 
@@ -55,7 +52,7 @@ defmodule Verk.Supervisor do
     ]
 
     if generate_node_id do
-      node_manager = worker(Verk.Node.Manager, [], id: Verk.Node.Manager)
+      node_manager = Verk.ChildSpec.worker(Verk.Node.Manager, Verk.Node.Manager, [])
 
       List.insert_at(children, 1, node_manager)
     else

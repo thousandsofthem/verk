@@ -7,10 +7,12 @@ defmodule Verk.QueueSupervisorTest do
       {:ok, {_, children}} = init([:default, 25])
       [queue_manager, pool, workers_manager] = children
 
-      assert {:"default.queue_manager", _, _, _, :worker, [Verk.QueueManager]} = queue_manager
-      assert {:"default.pool", _, _, _, :worker, [:poolboy]} = pool
+      assert %{id: :"default.queue_manager", type: :worker, modules: [Verk.QueueManager]} =
+               queue_manager
 
-      assert {:"default.workers_manager", _, _, _, :worker, [Verk.WorkersManager]} =
+      assert %{id: :"default.pool", type: :worker, modules: [:poolboy]} = pool
+
+      assert %{id: :"default.workers_manager", type: :worker, modules: [Verk.WorkersManager]} =
                workers_manager
     end
   end
@@ -23,8 +25,13 @@ defmodule Verk.QueueSupervisorTest do
 
   describe "child_spec/2" do
     test "returns supervisor spec" do
-      assert {:"default.supervisor", {Verk.Queue.Supervisor, :start_link, [:default, 25]}, _, _,
-              :supervisor, [Verk.Queue.Supervisor]} = child_spec(:default, 25)
+      assert %{
+               id: :"default.supervisor",
+               start: {Verk.Queue.Supervisor, :start_link, [:default, 25]},
+               shutdown: :infinity,
+               type: :supervisor,
+               modules: [Verk.Queue.Supervisor]
+             } = child_spec(:default, 25)
     end
   end
 end

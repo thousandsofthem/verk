@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 config :verk,
   queues: [{:default, 25}],
@@ -14,7 +14,7 @@ config :logger, :console,
   format: "\n$date $time [$level] $metadata$message\n",
   metadata: [:process_id]
 
-if Mix.env() == :test do
+if config_env() == :test do
   # Silent logging for tests
   config :logger, backends: []
 

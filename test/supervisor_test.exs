@@ -21,15 +21,20 @@ defmodule Verk.SupervisorTest do
       {:ok, {_, children}} = init([])
       [redix, producer, stats, schedule_manager, manager_sup, drainer] = children
 
-      assert {Verk.Redis, _, _, _, :worker, [Redix]} = redix
-      assert {Verk.EventProducer, _, _, _, :worker, [Verk.EventProducer]} = producer
-      assert {Verk.QueueStats, _, _, _, :worker, [Verk.QueueStats]} = stats
-      assert {Verk.ScheduleManager, _, _, _, :worker, [Verk.ScheduleManager]} = schedule_manager
+      assert %{id: Verk.Redis, type: :worker, modules: [Redix]} = redix
+      assert %{id: Verk.EventProducer, type: :worker, modules: [Verk.EventProducer]} = producer
+      assert %{id: Verk.QueueStats, type: :worker, modules: [Verk.QueueStats]} = stats
 
-      assert {Verk.Manager.Supervisor, _, _, _, :supervisor, [Verk.Manager.Supervisor]} =
+      assert %{id: Verk.ScheduleManager, type: :worker, modules: [Verk.ScheduleManager]} =
+               schedule_manager
+
+      assert %{id: Verk.Manager.Supervisor, type: :supervisor, modules: [Verk.Manager.Supervisor]} =
                manager_sup
 
-      assert {Verk.QueuesDrainer, _, _, _, :worker, [Verk.QueuesDrainer]} = drainer
+      assert %{id: Verk.QueuesDrainer, type: :worker, modules: [Verk.QueuesDrainer]} = drainer
+      # the drainer gets the whole shutdown_timeout to let running jobs finish
+      assert drainer.shutdown == Confex.get_env(:verk, :shutdown_timeout, 30_000)
+      assert %{shutdown: :infinity} = manager_sup
     end
 
     test "defines local_node_id randomly if generate_node_id is true" do
@@ -57,16 +62,18 @@ defmodule Verk.SupervisorTest do
       {:ok, {_, children}} = init([])
       [redix, node_manager, producer, stats, schedule_manager, manager_sup, drainer] = children
 
-      assert {Verk.Redis, _, _, _, :worker, [Redix]} = redix
-      assert {Verk.Node.Manager, _, _, _, :worker, [Verk.Node.Manager]} = node_manager
-      assert {Verk.EventProducer, _, _, _, :worker, [Verk.EventProducer]} = producer
-      assert {Verk.QueueStats, _, _, _, :worker, [Verk.QueueStats]} = stats
-      assert {Verk.ScheduleManager, _, _, _, :worker, [Verk.ScheduleManager]} = schedule_manager
+      assert %{id: Verk.Redis, type: :worker, modules: [Redix]} = redix
+      assert %{id: Verk.Node.Manager, type: :worker, modules: [Verk.Node.Manager]} = node_manager
+      assert %{id: Verk.EventProducer, type: :worker, modules: [Verk.EventProducer]} = producer
+      assert %{id: Verk.QueueStats, type: :worker, modules: [Verk.QueueStats]} = stats
 
-      assert {Verk.Manager.Supervisor, _, _, _, :supervisor, [Verk.Manager.Supervisor]} =
+      assert %{id: Verk.ScheduleManager, type: :worker, modules: [Verk.ScheduleManager]} =
+               schedule_manager
+
+      assert %{id: Verk.Manager.Supervisor, type: :supervisor, modules: [Verk.Manager.Supervisor]} =
                manager_sup
 
-      assert {Verk.QueuesDrainer, _, _, _, :worker, [Verk.QueuesDrainer]} = drainer
+      assert %{id: Verk.QueuesDrainer, type: :worker, modules: [Verk.QueuesDrainer]} = drainer
     end
   end
 end

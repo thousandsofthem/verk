@@ -10,8 +10,10 @@ defmodule Verk.ManagerSupervisorTest do
       {:ok, {_, children}} = init([])
       [manager, default] = children
 
-      assert {Verk.Manager, _, _, _, :worker, [Verk.Manager]} = manager
-      assert {:"default.supervisor", _, _, _, :supervisor, [Verk.Queue.Supervisor]} = default
+      assert %{id: Verk.Manager, type: :worker, modules: [Verk.Manager]} = manager
+
+      assert %{id: :"default.supervisor", type: :supervisor, modules: [Verk.Queue.Supervisor]} =
+               default
     end
   end
 
@@ -19,9 +21,14 @@ defmodule Verk.ManagerSupervisorTest do
     test "add a new queue" do
       queue = :test_queue
 
-      child =
-        {:"test_queue.supervisor", {Verk.Queue.Supervisor, :start_link, [:test_queue, 30]},
-         :permanent, :infinity, :supervisor, [Verk.Queue.Supervisor]}
+      child = %{
+        id: :"test_queue.supervisor",
+        start: {Verk.Queue.Supervisor, :start_link, [:test_queue, 30]},
+        restart: :permanent,
+        shutdown: :infinity,
+        type: :supervisor,
+        modules: [Verk.Queue.Supervisor]
+      }
 
       expect(Supervisor, :start_child, fn Verk.Manager.Supervisor, ^child -> :ok end)
 

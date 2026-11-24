@@ -7,7 +7,7 @@ defmodule Verk.Queue.Supervisor do
     * A `Verk.WorkersManager`
   """
   use Supervisor
-  alias Verk.{WorkersManager, QueueManager}
+  alias Verk.{ChildSpec, WorkersManager, QueueManager}
 
   @doc false
   def start_link(name, size) do
@@ -21,16 +21,16 @@ defmodule Verk.Queue.Supervisor do
     queue_manager = QueueManager.name(name)
 
     children = [
-      worker(QueueManager, [queue_manager, name], id: queue_manager),
+      ChildSpec.worker(queue_manager, QueueManager, [queue_manager, name]),
       poolboy_spec(pool_name, size),
-      worker(
+      ChildSpec.worker(
+        workers_manager,
         WorkersManager,
-        [workers_manager, name, queue_manager, pool_name, size],
-        id: workers_manager
+        [workers_manager, name, queue_manager, pool_name, size]
       )
     ]
 
-    supervise(children, strategy: :one_for_one)
+    Supervisor.init(children, strategy: :one_for_one)
   end
 
   defp poolboy_spec(pool_name, pool_size) do
@@ -39,7 +39,7 @@ defmodule Verk.Queue.Supervisor do
       []
     ]
 
-    worker(:poolboy, args, restart: :permanent, shutdown: 5000, id: pool_name)
+    ChildSpec.worker(pool_name, :poolboy, args)
   end
 
   @doc false
@@ -49,6 +49,6 @@ defmodule Verk.Queue.Supervisor do
 
   @doc false
   def child_spec(queue, size) when is_atom(queue) do
-    supervisor(Verk.Queue.Supervisor, [queue, size], id: name(queue))
+    ChildSpec.supervisor(name(queue), Verk.Queue.Supervisor, [queue, size])
   end
 end
