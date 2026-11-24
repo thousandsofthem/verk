@@ -144,4 +144,32 @@ defmodule IntegrationTest do
     assert dead, "job never reached the dead set"
     assert Jason.decode!(dead)["error_message"] =~ "integration failure d"
   end
+
+  @tag integration: true
+  test "a job with an unknown worker class is retried, not crash-looped (#151)", %{
+    redis: redis
+  } do
+    Process.register(self(), :integration_test)
+    on_exit(fn -> Application.stop(:integration) end)
+    Application.ensure_all_started(:integration)
+
+    {:ok, _} =
+      Verk.enqueue(%Verk.Job{queue: "queue_one", class: "Elixir.NoSuchWorker", args: []}, redis)
+
+    {:ok, _} =
+      Verk.enqueue(
+        %Verk.Job{queue: "queue_one", class: Integration.NotifyWorker, args: ["after"]},
+        redis
+      )
+
+    # the queue keeps working after the bad job
+    assert_receive {:ran, "after"}, 5_000
+
+    retried =
+      wait_for(fn -> Redix.command!(redis, ["ZRANGE", "retry", "0", "-1"]) |> List.first() end)
+
+    assert retried, "unknown-class job never reached the retry set"
+    assert Jason.decode!(retried)["class"] == "Elixir.NoSuchWorker"
+    assert Redix.command!(redis, ["LLEN", "inprogress:queue_one:1"]) == 0
+  end
 end
