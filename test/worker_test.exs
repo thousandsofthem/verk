@@ -63,6 +63,15 @@ defmodule Verk.WorkerTest do
       assert_receive {:"$gen_cast", {:failed, ^worker, "job_id", ^exception, _}}
     end
 
+    test "cast perform reports the failing job's stacktrace" do
+      worker = self()
+      job = %Verk.Job{jid: "job_id", class: "FailWorker", args: ["arg1"]}
+      handle_cast({:perform, job, worker}, :state)
+
+      # System.stacktrace/0 returns [] on OTP 23+, which stored failed jobs without a backtrace
+      assert_receive {:"$gen_cast", {:failed, ^worker, "job_id", _, [{FailWorker, :perform, 1, _} | _]}}
+    end
+
     test "cast perform accessing the job" do
       worker = self()
       job = %Verk.Job{jid: "job_id", class: "TestWorkerCurrentJob", args: [worker]}
