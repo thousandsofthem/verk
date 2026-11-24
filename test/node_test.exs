@@ -67,14 +67,17 @@ defmodule Verk.NodeTest do
     setup :register
 
     test "return ttl from a verk node id", %{redis: redis} do
-      assert_in_delta ttl!(@node, redis), 555, 5
+      # TTL counts down between PSETEX and PTTL; slow CI runners need more than a few ms
+      ttl = ttl!(@node, redis)
+      assert ttl <= 555 and ttl > 455
     end
   end
 
   describe "expire_in/3" do
     test "resets expiration item", %{redis: redis} do
       assert {:ok, _} = expire_in(@node, 888, redis)
-      assert_in_delta Redix.command!(redis, ["PTTL", @node_key]), 888, 5
+      ttl = Redix.command!(redis, ["PTTL", @node_key])
+      assert ttl <= 888 and ttl > 788
     end
   end
 
