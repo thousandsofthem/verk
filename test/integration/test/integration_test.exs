@@ -73,4 +73,61 @@ defmodule IntegrationTest do
     assert_receive %Verk.Events.QueuePaused{queue: :queue_one}
     assert_receive %Verk.Events.QueuePaused{queue: :queue_two}
   end
+
+  defp wait_for(fun, timeout \\ 5_000) do
+    deadline = System.monotonic_time(:millisecond) + timeout
+
+    Stream.repeatedly(fn ->
+      fun.() || (Process.sleep(50) && nil)
+    end)
+    |> Enum.find(fn result ->
+      result || System.monotonic_time(:millisecond) > deadline
+    end)
+  end
+
+  @tag integration: true
+  test "runs a job stored in verk 1.7.3's format", %{redis: redis} do
+    Process.register(self(), :integration_test)
+    on_exit(fn -> Application.stop(:integration) end)
+
+    # payload exactly as verk 1.7.3 enqueues it (args is a JSON-encoded string)
+    payload =
+      ~s({"args":"[\\"legacy\\"]","queue":"queue_one","max_retry_count":3,) <>
+        ~s("class":"Elixir.Integration.NotifyWorker","jid":"1112872072447533835",) <>
+        ~s("enqueued_at":1795532236,"finished_at":null,"failed_at":null,"error_message":null,) <>
+        ~s("retry_count":0,"retried_at":null,"created_at":null,"error_backtrace":null})
+
+    Redix.command!(redis, ["LPUSH", "queue:queue_one", payload])
+    Application.ensure_all_started(:integration)
+
+    assert_receive {:ran, "legacy"}, 5_000
+  end
+
+  @tag integration: true
+  test "failed jobs keep their backtrace in the retry set, then go dead", %{redis: redis} do
+    on_exit(fn -> Application.stop(:integration) end)
+    Application.ensure_all_started(:integration)
+
+    {:ok, _} =
+      Verk.enqueue(
+        %Verk.Job{queue: "queue_one", class: Integration.FailWorker, args: ["r"], max_retry_count: 1},
+        redis
+      )
+
+    {:ok, _} =
+      Verk.enqueue(
+        %Verk.Job{queue: "queue_two", class: Integration.FailWorker, args: ["d"], max_retry_count: 0},
+        redis
+      )
+
+    retried = wait_for(fn -> Redix.command!(redis, ["ZRANGE", "retry", "0", "-1"]) |> List.first() end)
+    assert retried, "job never reached the retry set"
+    retried = Jason.decode!(retried)
+    assert retried["error_message"] =~ "integration failure r"
+    assert retried["error_backtrace"] =~ "Integration.FailWorker.perform/1"
+
+    dead = wait_for(fn -> Redix.command!(redis, ["ZRANGE", "dead", "0", "-1"]) |> List.first() end)
+    assert dead, "job never reached the dead set"
+    assert Jason.decode!(dead)["error_message"] =~ "integration failure d"
+  end
 end
