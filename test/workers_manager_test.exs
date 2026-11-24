@@ -85,7 +85,7 @@ defmodule Verk.WorkersManagerTest do
     end
 
     test "with matching job_id but process is gone", %{monitors: monitors} do
-      pid = :erlang.list_to_pid('<3.57.1>')
+      pid = :erlang.list_to_pid(~c"<3.57.1>")
       row = {pid, "job_id", "job data", make_ref(), "start_time"}
       :ets.insert(monitors, row)
 

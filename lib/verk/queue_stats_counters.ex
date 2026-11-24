@@ -42,7 +42,7 @@ defmodule Verk.QueueStatsCounters do
   def reset_started(queue) do
     queue = to_charlist(queue)
 
-    unless :ets.update_element(@counters_table, queue, {2, 0}) do
+    if !:ets.update_element(@counters_table, queue, {2, 0}) do
       true = :ets.insert_new(@counters_table, new_element(queue))
     end
   end

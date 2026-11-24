@@ -69,7 +69,7 @@ defmodule Verk.Manager do
   """
   @spec add(atom, pos_integer) :: Supervisor.on_start_child()
   def add(queue, size) do
-    unless :ets.insert_new(@table, {queue, size, :running}) do
+    if !:ets.insert_new(@table, {queue, size, :running}) do
       Logger.error("Queue #{queue} is already running")
     end
 

@@ -159,7 +159,7 @@ defmodule Verk.QueueStatsTest do
   describe "handle_event/2" do
     test "with queue running and existing element" do
       QueueStatsCounters.init()
-      :ets.insert_new(@table, {'default', 1, 2, 3, 4, 5})
+      :ets.insert_new(@table, {~c"default", 1, 2, 3, 4, 5})
 
       event = %Verk.Events.QueueRunning{queue: :default}
       state = %State{queues: %{}}
@@ -167,7 +167,7 @@ defmodule Verk.QueueStatsTest do
       assert handle_events([event], :from, state) ==
                {:noreply, [], %State{queues: %{"default" => :running}}}
 
-      assert :ets.tab2list(@table) == [{'default', 0, 2, 3, 4, 5}]
+      assert :ets.tab2list(@table) == [{~c"default", 0, 2, 3, 4, 5}]
     end
 
     test "with queue running" do
@@ -178,7 +178,7 @@ defmodule Verk.QueueStatsTest do
       assert handle_events([event], :from, state) ==
                {:noreply, [], %State{queues: %{"default" => :running}}}
 
-      assert :ets.tab2list(@table) == [{'default', 0, 0, 0, 0, 0}]
+      assert :ets.tab2list(@table) == [{~c"default", 0, 0, 0, 0, 0}]
     end
 
     test "with started event" do
@@ -187,7 +187,7 @@ defmodule Verk.QueueStatsTest do
 
       assert handle_events([event], :from, :state) == {:noreply, [], :state}
 
-      assert :ets.tab2list(@table) == [{:total, 1, 0, 0, 0, 0}, {'queue', 1, 0, 0, 0, 0}]
+      assert :ets.tab2list(@table) == [{:total, 1, 0, 0, 0, 0}, {~c"queue", 1, 0, 0, 0, 0}]
     end
 
     test "with finished event" do
@@ -196,7 +196,7 @@ defmodule Verk.QueueStatsTest do
 
       assert handle_events([event], :from, :state) == {:noreply, [], :state}
 
-      assert :ets.tab2list(@table) == [{:total, -1, 1, 0, 0, 0}, {'queue', -1, 1, 0, 0, 0}]
+      assert :ets.tab2list(@table) == [{:total, -1, 1, 0, 0, 0}, {~c"queue", -1, 1, 0, 0, 0}]
     end
 
     test "with failed event" do
@@ -205,7 +205,7 @@ defmodule Verk.QueueStatsTest do
 
       assert handle_events([event], :from, :state) == {:noreply, [], :state}
 
-      assert :ets.tab2list(@table) == [{:total, -1, 0, 1, 0, 0}, {'queue', -1, 0, 1, 0, 0}]
+      assert :ets.tab2list(@table) == [{:total, -1, 0, 1, 0, 0}, {~c"queue", -1, 0, 1, 0, 0}]
     end
   end
 
@@ -287,7 +287,7 @@ defmodule Verk.QueueStatsTest do
              ]
     end
 
-    test 'test with unexpected message' do
+    test ~c"test with unexpected message" do
       QueueStatsCounters.init()
       assert handle_info(:pretty_sweet, :state) == {:noreply, [], :state}
     end
